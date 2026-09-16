@@ -1,14 +1,7 @@
-# film-stock-monitor
+# 胶卷库存监控Skill
 
 监控 **Fujifilm Provia 100F / Velvia 50**（135 与 120 规格）在美国 40 家零售商的
-库存与价格，并与上一轮快照比对，找出「缺货 → 有货」的补货跳变。
-
-这两款反转片在美国每年只补货 2–3 次，到货后数小时至数天售罄。所以这个项目要解决的
-不是比价，而是**尽早发现那个跳变**。
-
-它同时是一个 [Claude Code Skill](https://docs.claude.com/en/docs/claude-code/skills)——
-`SKILL.md` 让 Claude 知道何时该跑采集、以及如何解读结果。但脚本本身是独立的，
-不装 Claude Code 也能直接用。
+库存与价格，并与上一轮快照比对。这两款反转片在美国每年只补货 2–3 次，到货后数小时至数天售罄。
 
 ## 快速开始
 
@@ -38,13 +31,13 @@ scripts/check_stock.sh --method shopify      # 只查某一类平台
 scripts/check_stock.sh --discover <host>     # 对某 Shopify 站做 SKU 发现
 ```
 
-退出码：`0` 无事发生 ｜ `10` 有补货跳变 ｜ `20` 全被拦截、数据不可信。可直接挂定时任务。
+退出码：`0` 无事发生 ｜ `10` 有补货 ｜ `20` 全被拦截、数据不可信。可直接挂定时任务。
 
 ## 输出
 
 ```
 状态              商家                      SKU             价格  备注
-BACKORDER       Pro Camera Hawaii       P135        $28.99  超卖挂单 qty=0 policy=continue
+BACKORDER       Pro Camera Hawaii       P135        $28.99  无货 qty=0 policy=continue
 RESTOCK_DATED   Freestyle Photographic  P135        $35.95  到货 Oct 30, 2026
 OUT_OF_STOCK    KEH Camera              P135             —
 BLOCKED         Samy's Camera           P135             —  HTTP 403
@@ -78,20 +71,6 @@ BLOCKED         Samy's Camera           P135             —  HTTP 403
 
 商家注册表在 `stores.json`，**新增商家只需加一条记录，不用改代码**。
 
-## 已知的坑
-
-逐店端点、库存文案锚点、各家 JSON-LD 是否可信，全部记在 [`reference.md`](reference.md)。
-几个最容易踩的：
-
-1. **Shopify 的 `available` 不等于有现货。** 卖家允许超卖（`inventory_policy=continue`）时，
-   `inventory_quantity=0` 也返回 `available=true`。必须看库存数。
-2. **JSON-LD 会撒谎。** Unique Photo 写 `InStock`，页面实际是 `Backordered - On Allocation`。
-3. **缺货页上到处是 "in stock"。** KEH 缺货原文含 `notified when it comes back in stock`，
-   朴素匹配会直接误报有货。
-4. **可达性完全取决于出口 IP。** 同一套代码在两个网络下结果天差地别，换网络后必须重跑全量
-   再下结论。补齐浏览器请求头无效——拦的是 TLS 指纹和 IP。
-5. **Shopify 的 429 跨店按 IP 生效**，会同时封掉全部 10 家的整个前台。脚本内置全局限速器，
-   **不要为提速改回并发**。
 
 ## 项目结构
 
