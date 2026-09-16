@@ -8,13 +8,15 @@ VENV_PYTHON="$PROJECT_DIR/.venv/bin/python"
 # 解释器优先级：
 #   1) FILM_PYTHON —— 显式指定，永远最高
 #   2) 项目自带的 .venv —— 免去"忘了激活环境"这类问题
-#   3) 当前环境的 python —— 兼容 conda / 已激活的任意环境
+#   3) 当前环境的 python3 / python —— 兼容 conda / 已激活的任意环境
 # 之所以把 .venv 排在当前环境之前：脚本依赖 playwright，而"当前 python"
 # 很可能是系统自带的那个、装不了也没装依赖，报错信息还很难懂。
 if [[ -n "${FILM_PYTHON:-}" ]]; then
   PYTHON_BIN="$FILM_PYTHON"
 elif [[ -x "$VENV_PYTHON" ]]; then
   PYTHON_BIN="$VENV_PYTHON"
+elif command -v python3 >/dev/null 2>&1; then
+  PYTHON_BIN="python3"
 else
   PYTHON_BIN="python"
 fi

@@ -96,8 +96,8 @@ curl -s "https://www.dwaynesphoto.com/v1/products/52520/price_forecast.json" # �
 
 商品 ID：`52512`=Provia 135 ｜ `52520`=Provia 120 ｜ `54541`=Velvia 50 120×5（**EXP 过期片**）
 
-⚠️ 该 API **无库存字段**。判断能否购买需 headless 看 `Add to Cart` 是否禁用；
-实测未禁用，故归类为 `BACKORDER`。
+⚠️ 该 API **无库存字段**。脚本将其记为 `UNKNOWN`，价格可参考，但能否下单需核实商品页。
+`54541` 的名称带 `EXP`，属于过期片，不能当作新片补货。
 
 ---
 
@@ -116,6 +116,11 @@ curl -s "https://www.dwaynesphoto.com/v1/products/52520/price_forecast.json" # �
 | **Dodd Camera** | ❌ **403 Cloudflare** | JSON-LD 谎报 `InStock`，真实状态在页面文本 `Backorder` | `/catalogsearch/result/index/?q={q}` | ❌ **撒谎** |
 
 后四家的 403 是本轮新出现的，headless 同样过不去。这**不是**它们下架或没货。
+
+> 2026-09-16 晚些时候换了一个网络复测：MPEX、Fotocare、Dodd 直连全部可达（Fotocare 读出
+> `Available In-Store Only`，Dodd 读出 `Backorder`），B&H headless 也能过挑战并读到 JSON-LD；
+> Samy's 和 Adorama 仍然 403。同一天、同一份代码，两个网络的结论就差这么多，再次说明
+> 可达性表只能和出口 IP 一起看。
 
 ### Freestyle 是唯一预告到货日的商家
 
@@ -168,7 +173,15 @@ ctx.add_init_script("Object.defineProperty(navigator,'webdriver',{get:()=>undefi
 完整商品页（`HTTP 200`，title 正常，读到真实文案）。
 
 但同一 context 内接着请求第 2、3 个 URL 就又被挑战（`Performing security verification`）。
-所以 KEH 可读，但**必须每个 URL 之间留冷却或换新 context**，不能连发。
+
+同日换网络再测，表现反过来了：**新 context 的第一个请求吃到 `Error 1015`（HTTP 429，
+"You are being rate limited"），同一 context 里接着开的第 2、3 个页面反而正常渲染**，
+而且换 URL 顺序也是第一个被拦。两次实测的共同点是 KEH 对同一 IP 的请求节奏很敏感。
+脚本现在碰到 1015/429 会冷却约 12 秒后原地重试一次，实测三个 SKU 都能读出。
+
+另一个坑：KEH 缺货页上**没有本品价格**，页面里出现的全是"相关商品 / 最近浏览"的相机
+价格（几千美元）。旧逻辑锚点找不到就退回全文取最高价，会输出 `$3998` 这种值。现在
+锚点补了 `MODEL #`，并且不再退回全文，取不到就是 `None`。
 
 实测缺货原文：
 
@@ -211,14 +224,14 @@ Dan's Camera City、Milford Photo、Schiller's Camera
 | Velvia 50 RVP 120 - Roll | `68044c70-64b9-0130-87d9-20cf30bab63e` |
 | Velvia RVP 50 - 120 5 pack | `0292ba20-9f8f-0138-9fc1-00163ecd2826` |
 
-**三态判别**（该平台对任何 UUID 都返回 HTTP 200，状态码完全无用）：
+页面可能有以下三种表现（该平台对任何 UUID 都返回 HTTP 200，状态码不能单独判断）：
 
 1. 渲染出商品名与价格 → 该店有此 SKU
 2. 出现 `The requested product is no longer available.` → 曾售，已下架
-3. 返回固定长度的空模板页 → 从未上架
+3. 返回固定长度的空模板页 → 可能未上架，也可能是 Avina 脚本未加载
 
-第 3 种要先用假 UUID `00000000-0000-0000-0000-000000000000` 测出该店空模板基线长度
-再比对（各店长度不同）。渲染耗时约 7–13 秒。
+脚本用假 UUID `00000000-0000-0000-0000-000000000000` 测该店空模板基线长度；
+基线仅帮助定位空模板，不能证明商品未上架。空模板目前输出 `UNKNOWN`。
 
 ### ⚠️ 2026-09-16 整层不可读
 
@@ -226,9 +239,8 @@ Dan's Camera City、Milford Photo、Schiller's Camera
 JSON 端点）一律返回 403。商品页外壳 HTTP 200 能拿到，但商品内容由该域名的 JS 注入，
 于是页面渲染为空 —— **与"空模板 = 从未上架"在外观上完全一致**。
 
-这是个危险的静默失败：整层 15 家会被判成"都没上架"。因此脚本先用假 UUID 探基线，
-基线拿不到时返回 `UNKNOWN` 而非 `DELISTED`。**在 avina 不可达的网络下，Dakis 层的
-任何结论都不成立**，应直接按 `BLOCKED` 汇报。
+这是个危险的静默失败：空模板不能作为“都没上架”的证据。脚本现在返回 `UNKNOWN`。
+**在 Avina 不可达的网络下，Dakis 层的库存结论都未经核实。**
 
 未验证的店在 `stores.json` 里 `carries: []` 且 `verified: false`，脚本会把全部已知
 商品 UUID 都探一遍；验证通过后再把实际结果写回 `carries`。

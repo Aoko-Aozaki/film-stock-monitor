@@ -456,7 +456,7 @@
       "id": "keh",
       "name": "KEH Camera",
       "method": "headless",
-      "note": "2026-09-16 复核：headless 下首个页面可过 Cloudflare 并渲染出真实文案，此前标注的『持续 403 无解』已不成立。但同一 context 内后续请求会再次被挑战，必须每个 URL 之间留冷却或新建 context。缺货原文为 'this item is temporarily unavailable' + 'notified when it comes back in stock'，旧 STATUS_RULES 会命中 'in stock' 误判为有货，已修。",
+      "note": "2026-09-16 复核：headless 可读，此前的『持续 403 无解』不成立。两个网络实测都对请求节奏敏感：一次是首页通过、后续被挑战，另一次是新 context 第一个请求吃到 Cloudflare 1015 限流、后续正常。脚本对 1015/429 冷却后重试一次。缺货原文 'this item is temporarily unavailable' + 'notified when it comes back in stock'，STATUS_RULES 已处理。缺货页无本品价格，价格为空是正常的。",
       "urls": {
         "P135": "https://www.keh.com/shop/film-fujichrome-rdpiii-135-36-provia-100f-iso-100-35mm-color-positive-film-666683.html",
         "P120x5": "https://www.keh.com/shop/film-fujichrome-rdpiii-120-provia-100f-iso-100-propack-5-rolls-color-positive-film-666705.html",

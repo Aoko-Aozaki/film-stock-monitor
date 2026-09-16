@@ -1,12 +1,3 @@
-# 历次巡检产物
+# 巡检快照
 
-每轮 `--json` 快照、日志与人工报告都放这里，**不要放回 skill 根目录**——
-skill 目录应只含指令（SKILL.md）、参考资料（reference.md）、数据源
-（stores.json）与脚本，产物混进去会让 skill 越滚越大。
-
-快照用于 `--diff`：
-
-```bash
-scripts/check_stock.sh --json runs/snap-$(date +%F).jsonl \
-                       --diff  runs/snap-上一轮.jsonl
-```
+用 `--json runs/<名称>.jsonl` 保存每轮结果，再用 `--diff runs/<上一轮>.jsonl` 比较。此目录中的快照和日志已被 Git 忽略。

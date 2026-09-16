@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Provia 100F / Velvia 50 全美库存与价格采集器。
+Provia 100F / Velvia 50 登记商家的库存与价格采集器。
 
 用法:
   # 推荐：先激活任意已安装依赖的 Python 环境，再使用通用启动器
@@ -14,10 +14,11 @@ Provia 100F / Velvia 50 全美库存与价格采集器。
   python3 check_stock.py --store freestyle,keh# 只抓指定商家
   python3 check_stock.py --all                # 含 headless（B&H/Adorama/UniquePhoto/KEH）与 Dakis
   python3 check_stock.py --json out.jsonl     # 额外输出 JSONL
-  python3 check_stock.py --diff prev.jsonl    # 与上一轮快照比对，单列补货跳变
+  python3 check_stock.py --diff prev.jsonl    # 与上一轮快照比对，单列新增线索
   python3 check_stock.py --discover <host>    # 对某 Shopify 域名做 SKU 发现后退出
 
-退出码：0=无事发生 ｜ 10=有补货跳变或新增可买项 ｜ 20=全被拦截，数据不可信。
+退出码：0=无新增购买或到货线索 ｜ 10=有新增购买或到货线索 ｜
+        20=无可买线索且有未核实项，不能断言无货。
 
 状态归一化（按告警价值从高到低）:
   IN_STOCK       真有货，立即告警
@@ -95,10 +96,14 @@ class _TextExtractor(htmlparser.HTMLParser):
     def handle_starttag(self, tag, attrs):
         if tag in self.SKIP:
             self._skip_depth += 1
+        elif not self._skip_depth:
+            self.parts.append(" ")
 
     def handle_endtag(self, tag):
         if tag in self.SKIP and self._skip_depth:
             self._skip_depth -= 1
+        elif not self._skip_depth:
+            self.parts.append(" ")
 
     def handle_data(self, data):
         if not self._skip_depth:
@@ -165,7 +170,7 @@ def extract_price(window, page_html=""):
 
 
 def status_window(text, span=(360, 280)):
-    """定位状态文案，返回 (状态, 该文案前后的窗口)。
+    """定位状态文案，返回状态、取价窗口和简短证据。
 
     两条铁律：
     1) 严格按 STATUS_RULES 的顺序取第一个命中，即"按严重度优先"，
@@ -179,8 +184,10 @@ def status_window(text, span=(360, 280)):
     for status, pat in STATUS_RULES:
         m = re.search(pat, low)
         if m:
-            return status, low[max(0, m.start() - span[0]): m.start() + span[1]]
-    return "UNKNOWN", text[:900]
+            window = low[max(0, m.start() - span[0]): m.start() + span[1]]
+            evidence = low[m.start(): m.end() + 140]
+            return status, window, evidence
+    return "UNKNOWN", text[:900], text[:170]
 
 
 def progress(msg):
@@ -266,6 +273,7 @@ def _shopify_status(d, variants):
 def shopify_discover(host, queries=("velvia 50", "provia 100f", "velvia", "provia")):
     """用 suggest.json 发现新 SKU。limit 上限 10，命中 10 条要换更细的词再查。"""
     found = {}
+    failed = 0
     for q in queries:
         u = (f"https://{host}/search/suggest.json?q={urllib.parse.quote(q)}"
              f"&resources[type]=product&resources[limit]=10")
@@ -275,7 +283,9 @@ def shopify_discover(host, queries=("velvia 50", "provia 100f", "velvia", "provi
                 if re.search(r"velvia|provia", p["title"], re.I):
                     found[p["url"].split("?")[0]] = (p["title"], p.get("available"), p.get("price"))
         except Exception:
-            pass
+            failed += 1
+    if failed == len(queries):
+        raise RuntimeError(f"{host}: Shopify 搜索请求全部失败，无法判断是否有商品")
     return found
 
 
@@ -294,7 +304,7 @@ def check_html(store):
             continue
 
         text = flatten(body)
-        status, window = status_window(text)
+        status, window, evidence = status_window(text)
 
         # JSON-LD 仅在该店被标记为可信时作为兜底
         if status == "UNKNOWN" and store.get("jsonld_trusted"):
@@ -304,6 +314,7 @@ def check_html(store):
                 status = ("IN_STOCK" if "instock" in v else
                           "BACKORDER" if "backorder" in v else
                           "DELISTED" if "discontinued" in v else "OUT_OF_STOCK")
+                evidence = f"JSON-LD availability={ld.group(1)}"
 
         due = DUE_RE.search(text)
         lim = LIMIT_RE.search(text)
@@ -314,7 +325,7 @@ def check_html(store):
                        price=extract_price(window, body),
                        restock_date=due.group(1) if due else None,
                        purchase_limit=int(lim.group(1)) if lim else None,
-                       raw=window.strip()[:150]))
+                       raw=evidence.strip()[:170]))
     return out
 
 
@@ -328,9 +339,10 @@ def check_dwaynes(store):
         try:
             _, body = fetch(api)
             d = json.loads(body)
-            out.append(rec(store, sku, url, status="BACKORDER",
-                           price=float(d.get("price") or 0),
-                           raw=f"{d.get('name','')[:70]} | API 无库存字段，加购按钮未禁用"))
+            price = d.get("price")
+            out.append(rec(store, sku, url, status="UNKNOWN",
+                           price=float(price) if price is not None else None,
+                           raw=f"{d.get('name','')[:70]} | API 无库存字段，需核实商品页"))
         except Exception as e:
             out.append(rec(store, sku, url, status="BLOCKED", raw=type(e).__name__))
     return out
@@ -413,23 +425,45 @@ def _wait_cf(pg, tries=6, step=4000):
     return False
 
 
-def _headless_one(pg, store, sku, url):
+def _cf_error(text):
+    """Cloudflare 错误页（1015 限流、1020 拒绝等）的错误码；不是错误页返回 None。
+
+    这类页面可能以 200 或 429 返回，标题也不是 "Just a moment"，正文只有
+    "Error 1015 Ray ID: ..."。2026-09-16 KEH 实测曾被记成 UNKNOWN，其实是被拦。
+    """
+    head = text[:600].lower()
+    m = re.search(r"\berror (10\d\d)\b", head) if "ray id" in head else None
+    return m.group(1) if m else None
+
+
+def _headless_one(pg, store, sku, url, cooldown=12000):
     try:
-        resp = pg.goto(url, timeout=70000, wait_until="domcontentloaded")
-        code = resp.status if resp else None
-        _wait_cf(pg)
-        pg.wait_for_timeout(2500)
-        text = re.sub(r"\s+", " ", pg.evaluate("()=>document.body.innerText"))
-        page_html = pg.content()
+        for attempt in range(2):
+            resp = pg.goto(url, timeout=70000, wait_until="domcontentloaded")
+            code = resp.status if resp else None
+            _wait_cf(pg)
+            pg.wait_for_timeout(2500)
+            text = re.sub(r"\s+", " ", pg.evaluate("()=>document.body.innerText"))
+            page_html = pg.content()
+            # 2026-09-16 KEH 实测：新 context 的第一个请求会吃到 1015 限流，
+            # 同一 context 里接着开第二、三个页面反而正常。所以碰到 1015/429
+            # 不急着放弃，冷却一下原地再试一次。
+            if attempt == 0 and (code == 429 or _cf_error(text)):
+                pg.wait_for_timeout(cooldown)
+                continue
+            break
     except Exception as e:
         return rec(store, sku, url, status="BLOCKED", raw=f"{type(e).__name__}: {str(e)[:60]}")
 
-    if code == 403 or "just a moment" in (pg.title() or "").lower():
-        return rec(store, sku, url, status="BLOCKED", raw=f"HTTP {code} / CF challenge")
+    cf_err = _cf_error(text)
+    if code in (403, 429) or "just a moment" in (pg.title() or "").lower() or cf_err:
+        why = f"Cloudflare error {cf_err}" if cf_err else f"HTTP {code} / CF challenge"
+        return rec(store, sku, url, status="BLOCKED", raw=why)
     if code == 404 or re.search(r"\b404\b.{0,40}(not found|getting lost)", text[:900], re.I):
         return rec(store, sku, url, status="DELISTED", raw="404 / soft-404")
 
     status = "UNKNOWN"
+    evidence = ""
     if store.get("jsonld_trusted"):
         ld = re.search(r'"availability"\s*:\s*"([^"]+)"', page_html)
         if ld:
@@ -437,18 +471,29 @@ def _headless_one(pg, store, sku, url):
             status = ("IN_STOCK" if "instock" in v else
                       "BACKORDER" if "backorder" in v else
                       "DELISTED" if "discontinued" in v else "OUT_OF_STOCK")
+            evidence = f"JSON-LD availability={ld.group(1)}"
+    status_win = ""
     if status == "UNKNOWN":
-        status = norm_status(text[:4000])
+        status, status_win, evidence = status_window(text[:4000])
+    else:
+        _, status_win, _ = status_window(text[:4000])
 
-    m = re.search(r"(MFR ?#|SKU:|MFR:)", text)
-    win = text[max(0, (m.start() if m else 0) - 420): (m.start() if m else 0) + 300]
-    prices = sorted(set(PRICE_RE.findall(win)) or set(PRICE_RE.findall(text)),
-                    key=lambda x: float(x.replace(",", "")))
+    # 价格只在料号锚点附近取，取不到再看状态文案附近。绝不退回全文：
+    # 2026-09-16 KEH 实测，缺货页上根本没有本品价格，全文里的都是
+    # "相关商品 / 最近浏览" 的相机价格，退回全文会输出 $3998 这类离谱值。
+    m = re.search(r"(MFR ?#|MODEL ?#|SKU:|MFR:)", text)
+    win = text[max(0, m.start() - 420): m.start() + 300] if m else ""
+    prices = sorted(set(PRICE_RE.findall(win)), key=lambda x: float(x.replace(",", "")))
+    if prices:
+        price = float(prices[-1].replace(",", ""))
+    else:
+        near = PRICE_RE.findall(status_win)
+        price = float(near[0].replace(",", "")) if near else None
     due = DUE_RE.search(text)
     return rec(store, sku, url, status=status,
-               price=float(prices[-1].replace(",", "")) if prices else None,
+               price=price,
                restock_date=due.group(1) if due else None,
-               raw=win[:150])
+               raw=(evidence or win)[:150])
 
 
 def _dakis_baseline(pg, host, bogus_uuid):
@@ -472,8 +517,9 @@ def _dakis_one(pg, store, sku, url, baseline):
     if re.search(r"no longer available|requested product", text, re.I):
         return rec(store, sku, url, status="DELISTED", raw="Dakis: no longer available")
     if not re.search(r"provia|velvia", text, re.I):
-        note = "未上架（等于空模板基线）" if abs(len(text) - baseline) < 60 else f"未渲染 len={len(text)}"
-        return rec(store, sku, url, status="DELISTED" if baseline > 0 else "UNKNOWN", raw=f"Dakis: {note}")
+        note = "空模板" if baseline > 0 and abs(len(text) - baseline) < 60 else f"未渲染 len={len(text)}"
+        # Avina 脚本被拦时也会呈现空模板，不能据此断定商品已下架。
+        return rec(store, sku, url, status="UNKNOWN", raw=f"Dakis: {note}，无法确认库存")
 
     m = re.search(r"(Provia|Velvia)", text, re.I)
     win = text[max(0, m.start() - 80): m.start() + 420]
@@ -487,8 +533,8 @@ def _dakis_one(pg, store, sku, url, baseline):
 DISPATCH = {"shopify": check_shopify, "html": check_html, "dwaynes_api": check_dwaynes}
 ORDER = ["IN_STOCK", "BACKORDER", "RESTOCK_DATED", "BLOCKED",
          "OUT_OF_STOCK", "IN_STORE_ONLY", "DELISTED", "UNKNOWN"]
-# 只有这三种算"能买到"。缺货→其中任一 = 补货跳变，是本系统唯一要抓的事件。
-BUYABLE = ("IN_STOCK", "BACKORDER", "RESTOCK_DATED")
+# 三种值得提醒的线索：现货、允许排队下单、已公布到货日。
+ACTIONABLE = ("IN_STOCK", "BACKORDER", "RESTOCK_DATED")
 
 
 def load_snapshot(path):
@@ -505,10 +551,10 @@ def load_snapshot(path):
 
 
 def diff_report(prev, results):
-    """对比上一轮快照，分出补货跳变 / 转缺货 / 新增 / 消失。
+    """对比上一轮快照，分出新增线索 / 线索消失 / 新监控项 / 未抓取项。
 
     补货窗口只有几小时到几天，所以"跳变"本身才是告警，绝对状态是次要的。
-    BLOCKED 不参与跳变判定：抓取失败不是状态变化，把它当成变化会每轮刷屏。
+    BLOCKED 和 UNKNOWN 不参与跳变判定：未核实的状态不能证明库存变化。
     """
     restock, gone, added, vanished = [], [], [], []
     seen = set()
@@ -517,23 +563,22 @@ def diff_report(prev, results):
         seen.add(key)
         old = prev.get(key)
         if old is None:
-            if r["status"] in BUYABLE:
+            if r["status"] in ACTIONABLE:
                 added.append((None, r))
             continue
-        # 上轮抓取失败 → 本轮可买：不能算"补货跳变"（上轮状态根本未知），
-        # 但确实是"现在能买"，必须单独列出，不能像其他 BLOCKED 一样静默跳过。
-        if old["status"] == "BLOCKED":
-            if r["status"] in BUYABLE:
+        # 上轮未核实 → 本轮有线索：不能证明发生了补货，单独列为新发现。
+        if old["status"] in ("BLOCKED", "UNKNOWN"):
+            if r["status"] in ACTIONABLE:
                 added.append((old, r))
             continue
-        if r["status"] == "BLOCKED":
+        if r["status"] in ("BLOCKED", "UNKNOWN"):
             continue
-        if old["status"] not in BUYABLE and r["status"] in BUYABLE:
+        if old["status"] not in ACTIONABLE and r["status"] in ACTIONABLE:
             restock.append((old, r))
-        elif old["status"] in BUYABLE and r["status"] not in BUYABLE:
+        elif old["status"] in ACTIONABLE and r["status"] not in ACTIONABLE:
             gone.append((old, r))
     for key, old in prev.items():
-        if key not in seen and old["status"] in BUYABLE:
+        if key not in seen and old["status"] in ACTIONABLE:
             vanished.append((old, None))
     return restock, gone, added, vanished
 
@@ -542,19 +587,19 @@ def print_diff(prev, results):
     restock, gone, added, vanished = diff_report(prev, results)
     print("\n" + "=" * 108)
     if restock:
-        print("### 🔔 补货跳变（缺货 → 可买）——这是要立刻行动的部分")
+        print("### 🔔 新增购买或到货线索（由已知无货状态转入）")
         for old, r in restock:
             pr = f"${r['price']:.2f}" if r["price"] else ""
             print(f"  {old['status']} → {r['status']}  {r['store_name']} {r['sku']} {pr}"
                   f" {r.get('restock_date') or ''}\n      {r['url']}")
     else:
-        print("### 无补货跳变。")
+        print("### 无已证实的状态转变。")
     if added:
-        print("\n### 新监控项，首次抓取即可买：")
+        print("\n### 新监控项或上轮未核实，本轮发现购买或到货线索：")
         for _, r in added:
             print(f"  [{r['status']}] {r['store_name']} {r['sku']}  {r['url']}")
     if gone:
-        print("\n### 由可买转为不可买（已售罄）：")
+        print("\n### 购买或到货线索消失：")
         for old, r in gone:
             print(f"  {old['status']} → {r['status']}  {r['store_name']} {r['sku']}")
     if vanished:
@@ -566,18 +611,23 @@ def print_diff(prev, results):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--method", help="shopify | html | dwaynes_api | headless | dakis")
+    ap.add_argument("--method", choices=("shopify", "html", "dwaynes_api", "headless", "dakis", "blocked"),
+                    help="只检查指定采集方式")
     ap.add_argument("--store", help="逗号分隔的 store id")
-    ap.add_argument("--all", action="store_true", help="含 headless / dakis（慢，约 3-5 分钟）")
+    ap.add_argument("--all", action="store_true", help="含 headless / dakis（可能耗时数十分钟）")
     ap.add_argument("--json", help="额外写出 JSONL")
     ap.add_argument("--diff", metavar="PREV.jsonl",
-                    help="与上一轮快照比对，单独列出补货跳变")
+                    help="与上一轮快照比对，单独列出购买或到货线索")
     ap.add_argument("--discover", metavar="HOST",
                     help="对某个 Shopify 域名跑 SKU 发现，然后退出")
     args = ap.parse_args()
 
     if args.discover:
-        found = shopify_discover(args.discover)
+        try:
+            found = shopify_discover(args.discover)
+        except RuntimeError as e:
+            print(e, file=sys.stderr)
+            return 20
         if not found:
             print(f"{args.discover}: 未发现 Provia/Velvia 商品（或该站不是 Shopify）")
             return 0
@@ -589,9 +639,20 @@ def main():
     stores = REGISTRY["stores"]
     if args.store:
         want = {s.strip() for s in args.store.split(",")}
+        missing = want - {s["id"] for s in stores}
+        if missing:
+            ap.error(f"未知商家 id: {', '.join(sorted(missing))}")
         stores = [s for s in stores if s["id"] in want]
     if args.method:
         stores = [s for s in stores if s["method"] == args.method]
+    if not stores:
+        ap.error("筛选后没有商家")
+    prev = None
+    if args.diff:
+        try:
+            prev = load_snapshot(args.diff)
+        except (OSError, ValueError, KeyError) as e:
+            ap.error(f"上一轮快照无法读取: {e}")
 
     fast = [s for s in stores if s["method"] in DISPATCH]
     slow = [s for s in stores if s["method"] in ("headless", "dakis")]
@@ -649,14 +710,13 @@ def main():
                   f"{('$%.2f' % r['price']) if r['price'] else ''} "
                   f"{r.get('restock_date') or ''}\n      {r['url']}")
     else:
-        print("\n### 全网无货，且无任何商家给出到货日。")
+        print("\n### 本轮未发现可买或有到货日的商品。")
+        if any(r["status"] in ("BLOCKED", "UNKNOWN") for r in results):
+            print("部分商品未核实，不能据此断言全部缺货。")
 
     restock = added = []
     if args.diff:
-        try:
-            restock, added = print_diff(load_snapshot(args.diff), results)
-        except OSError as e:
-            print(f"\n⚠ 读不到上一轮快照 {args.diff}：{e}", file=sys.stderr)
+        restock, added = print_diff(prev, results)
 
     if args.json:
         with open(args.json, "w", encoding="utf-8") as f:
@@ -664,10 +724,10 @@ def main():
                 f.write(json.dumps(r, ensure_ascii=False) + "\n")
         print(f"\n已写出 {len(results)} 条 → {args.json}")
 
-    # 退出码给定时任务用：0=无事发生，10=有补货，20=全被拦（数据不可信）
+    # 退出码给定时任务用：20 表示无可买线索时仍有未核实项。
     if restock or added:
         return 10
-    if counts.get("BLOCKED", 0) and not hot:
+    if not hot and (counts.get("BLOCKED", 0) or counts.get("UNKNOWN", 0)):
         return 20
     return 0
 
