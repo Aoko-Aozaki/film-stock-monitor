@@ -1,0 +1,9 @@
+name: film-stock-monitor
+channels:
+  - conda-forge
+dependencies:
+  - python>=3.10
+  - pip
+  - pip:
+      - playwright>=1.40,<2
+

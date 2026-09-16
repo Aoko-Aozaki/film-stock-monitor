@@ -1,0 +1,606 @@
+{
+  "_comment": "美国市场 Provia 100F / Velvia 50（135/120 规格）监控源注册表。sku 代码：P=Provia 100F, V=Velvia 50；135/120=规格；x1=单卷, x5=5卷装, x20=20卷装。method 唯一决定采集路径，也就是访问难度分级——不要再另设 tier 字段，旧版 tier 与 reference.md 的 A/B/C/D 分级互相矛盾，已移除。",
+  "_updated": "2026-09-16",
+  "products": {
+    "P135": {
+      "film": "Provia 100F",
+      "format": "135-36",
+      "pack": 1,
+      "mfr": [
+        "16326028"
+      ],
+      "jan": [
+        "4547410247626",
+        "4547410247633"
+      ]
+    },
+    "P135x5": {
+      "film": "Provia 100F",
+      "format": "135-36",
+      "pack": 5,
+      "mfr": [
+        "14981733",
+        "16326030"
+      ],
+      "jan": [
+        "4902520191748"
+      ]
+    },
+    "P120x1": {
+      "film": "Provia 100F",
+      "format": "120",
+      "pack": 1,
+      "mfr": [
+        "16326092"
+      ],
+      "jan": [
+        "4547410247718"
+      ]
+    },
+    "P120x5": {
+      "film": "Provia 100F",
+      "format": "120",
+      "pack": 5,
+      "mfr": [
+        "16326092"
+      ],
+      "jan": []
+    },
+    "P120x20": {
+      "film": "Provia 100F",
+      "format": "120",
+      "pack": 20,
+      "mfr": [
+        "15405566"
+      ],
+      "jan": []
+    },
+    "V135": {
+      "film": "Velvia 50",
+      "format": "135-36",
+      "pack": 1,
+      "mfr": [
+        "16329161",
+        "15757464"
+      ],
+      "jan": [
+        "4547410247671",
+        "4547410247664"
+      ]
+    },
+    "V135x5": {
+      "film": "Velvia 50",
+      "format": "135-36",
+      "pack": 5,
+      "mfr": [
+        "16329173",
+        "15942265"
+      ],
+      "jan": []
+    },
+    "V120x1": {
+      "film": "Velvia 50",
+      "format": "120",
+      "pack": 1,
+      "mfr": [
+        "16329185"
+      ],
+      "jan": [
+        "4547410247732"
+      ]
+    },
+    "V120x5": {
+      "film": "Velvia 50",
+      "format": "120",
+      "pack": 5,
+      "mfr": [
+        "16329185",
+        "15757543"
+      ],
+      "jan": []
+    }
+  },
+  "dakis_uuids": {
+    "P135": "5c50798b-9597-4b63-bf21-0dda2bd84a8a",
+    "P120x1": "de6b2b6c-979e-45e4-a661-6043366337fb",
+    "P120b": "1b90581b-09bd-4bff-a667-2c070d12a3f8",
+    "V135": "463658f8-c0f2-4eb6-8a0b-8b87d8d838a8",
+    "V120x1": "68044c70-64b9-0130-87d9-20cf30bab63e",
+    "V120x5": "0292ba20-9f8f-0138-9fc1-00163ecd2826",
+    "_film_category": "160830cc-7790-4399-9330-586545ab3e9b",
+    "_bogus_probe": "00000000-0000-0000-0000-000000000000"
+  },
+  "stores": [
+    {
+      "id": "essential",
+      "name": "Essential Photo Supply",
+      "method": "shopify",
+      "host": "essentialphotosupply.com",
+      "jsonld_trusted": null,
+      "skus": {
+        "P135": "fujifilm-provia-100f-iso-color-35mm-film-36-exp",
+        "P120x1": "fujifilm-provia-100f-iso-color-120-film-single-roll",
+        "V135": "fujifilm-velvia-50-iso-color-35mm-film-36-exp",
+        "V120x1": "fujifilm-velvia-50-iso-color-120-film-single-roll"
+      },
+      "note": "2026-09-16：全部 4 个 handle 改名，旧 handle 已 404。改名后 SKU 与富士料号一一对应。"
+    },
+    {
+      "id": "procamerahawaii",
+      "name": "Pro Camera Hawaii",
+      "method": "shopify",
+      "host": "procamerahawaii.com",
+      "jsonld_trusted": null,
+      "note": "2026-09-16 新增。4 个 SKU 全部 inventory_policy=continue 且 qty=0，即允许超卖的挂单：.js 返回 available=true 但并无现货，应判 BACKORDER 而非 IN_STOCK。",
+      "skus": {
+        "P135": "fujifilm-fujichrome-provia-100f",
+        "P120x5": "fujifilm-fujichrome-provia-100f-120mm-5-pack",
+        "V135": "fujifilm-fujichrome-velvia-rvp-50-color-slide-film",
+        "V120x5": "fujifilm-fujichrome-velvia-50-120mm-5-pack"
+      }
+    },
+    {
+      "id": "buymorefilm",
+      "name": "BuyMoreFilm",
+      "method": "shopify",
+      "host": "buymorefilm.com",
+      "jsonld_trusted": null,
+      "note": "另有 4 个过期片挂单，需按标题打标",
+      "skus": {
+        "P135": "fujifilm-fujichrome-provia-100f-professional-135-36-new",
+        "P120x1": "fujifilm-fujichrome-provia-100f-professional-120-1-roll-new",
+        "P120x5": "fujifilm-fujichrome-provia-100f-120-5-pack-new",
+        "V135": "fujifilm-fujichrome-velvia-50-professional-135-36-new",
+        "V120x1": "fujifilm-fujichrome-velvia-50-professional-120-1-roll-new",
+        "V120x5": "fujifilm-fujichrome-velvia-50-professional-120-5-pack-new"
+      }
+    },
+    {
+      "id": "reformed",
+      "name": "Reformed Film Lab",
+      "method": "shopify",
+      "host": "reformedfilmlab.com",
+      "jsonld_trusted": null,
+      "skus": {
+        "P135": "fuji-provia-100f-35mm-36-exposure-roll",
+        "P120x5": "fuji-provia-100f-120-5-pack",
+        "V135": "fujifilm-velvia-50-35mm-36-exposure-roll",
+        "V120x5": "fujifilm-velvia-50-120-5-pack"
+      }
+    },
+    {
+      "id": "filmsupplyclub",
+      "name": "Film Supply Club",
+      "method": "shopify",
+      "host": "filmsupply.club",
+      "jsonld_trusted": null,
+      "skus": {
+        "P135": "fujfilm-provia-100-35mm-color-positive-film-single-roll",
+        "P120x5": "fujfilm-provia-100f-120-color-positive-film-five-roll-pack",
+        "V135": "fujfilm-velvia-50-35mm-color-positive-film-single-roll-purchase",
+        "V120x5": "fujfilm-velvia-50-120-color-positive-film-five-roll-pack"
+      }
+    },
+    {
+      "id": "pictureline",
+      "name": "pictureline",
+      "method": "shopify",
+      "host": "www.pictureline.com",
+      "jsonld_trusted": null,
+      "note": "低价属多年未更新的僵尸挂单",
+      "skus": {
+        "P135": "fujichrome-provia-100-f-135-36",
+        "V135": "fujichrome-velvia-50-135-36",
+        "V135_alt": "fujichrome-velvia-50-135-36-film-one-roll",
+        "V120x1": "fujichrome-velvia-50-120"
+      }
+    },
+    {
+      "id": "kmcamera",
+      "name": "K&M Camera",
+      "method": "shopify",
+      "host": "kmcamera.com",
+      "jsonld_trusted": null,
+      "skus": {
+        "P135": "fuj16326028",
+        "P120x1": "fuj16326092s",
+        "P120x5": "fuj16326092",
+        "V120x5": "fuj16329185"
+      }
+    },
+    {
+      "id": "prophotosupply",
+      "name": "Pro Photo Supply",
+      "method": "shopify",
+      "host": "prophotosupply.com",
+      "jsonld_trusted": null,
+      "skus": {
+        "P135": "provia-100f-color-slide-film-iso-100-35mm-36-exposures"
+      }
+    },
+    {
+      "id": "camerawest",
+      "name": "Camera West",
+      "method": "shopify",
+      "host": "camerawest.com",
+      "jsonld_trusted": null,
+      "skus": {
+        "P135": "fujifilm-provia-100f-35mm"
+      }
+    },
+    {
+      "id": "bandc",
+      "name": "B&C Camera",
+      "method": "shopify",
+      "host": "store.bandccamera.com",
+      "jsonld_trusted": null,
+      "skus": {
+        "P135": "fuji-pro-rdpiii-135-36",
+        "P120x1": "fuji-pro-rdp-iii-120",
+        "V135": "fujifilm-fujichrome-velvia-rvp-50-color-film-35mm-roll-36-exp",
+        "V120x1": "fujifilm-fujichrome-velvia-rvp-50-color-film-120-roll"
+      }
+    },
+    {
+      "id": "freestyle",
+      "name": "Freestyle Photographic",
+      "method": "html",
+      "jsonld_trusted": false,
+      "note": "唯一会预告到货日的商家，务必抓 Due: 字段",
+      "search": "https://www.freestylephoto.com/search?q={q}",
+      "urls": {
+        "P135": "https://www.freestylephoto.com/16326028-Fuji-Fujichrome-Provia-100F-100-ISO-35mm-x-36-exp.",
+        "P120x5": "https://www.freestylephoto.com/02302808-Fuji-Fujichrome-Provia-100F-100-ISO-120-Size-5-Pack",
+        "P120x20": "https://www.freestylephoto.com/02302820-Fujichrome-Provia-100F-100-iso-120-size-RDPIII-20-Roll-Pro-Pack",
+        "V135": "https://www.freestylephoto.com/02303205-Fujichrome-Velvia-50-ISO-35mm-x-36-exp.-RVP",
+        "V120x5": "https://www.freestylephoto.com/02303208-Fuji-Fujichrome-Velvia-50-ISO-120-Size-RVP-5-Pack",
+        "V120x1": "https://www.freestylephoto.com/02303207-Fujichrome-Velvia-50-iso-120-size-RVP"
+      }
+    },
+    {
+      "id": "hunts",
+      "name": "Hunt's Photo & Video",
+      "method": "html",
+      "jsonld_trusted": false,
+      "note": "商品页可直接用富士料号拼 URL",
+      "url_template": "https://www.huntsphotoandvideo.com/detail_page.cfm?productid={mfr}",
+      "urls": {
+        "P135": "https://www.huntsphotoandvideo.com/detail_page.cfm?productid=16326028",
+        "P120x5": "https://www.huntsphotoandvideo.com/detail_page.cfm?productid=16326092"
+      }
+    },
+    {
+      "id": "bluemoon",
+      "name": "Blue Moon Camera",
+      "method": "html",
+      "jsonld_trusted": false,
+      "note": "URL 用 JAN 码做主键",
+      "url_template": "https://bluemooncamera.com/shop/product/{jan}/",
+      "urls": {
+        "P135": "https://bluemooncamera.com/shop/product/4547410247633/fuji-provia-100f-35mm-film--36-exposures",
+        "P120x1": "https://bluemooncamera.com/shop/product/4547410247718/fuji-provia-100f-film--120-single-roll",
+        "V135": "https://bluemooncamera.com/shop/product/4547410247671/fuji-velvia-rvp-50-35mm-film--36-exposures",
+        "V120x1": "https://bluemooncamera.com/shop/product/4547410247732/fuji-velvia-rvp-50-film--120-single-roll"
+      }
+    },
+    {
+      "id": "acephoto",
+      "name": "Ace Photo",
+      "method": "html",
+      "jsonld_trusted": true,
+      "urls": {
+        "P135x5": "https://acephoto.net/cameras/fuji-provia100-f-135-36-e-6-slide-film/",
+        "P120x5": "https://acephoto.net/cameras/fuji-provia-100f-120/",
+        "V135": "https://acephoto.net/cameras/fujichrome-velvia-50-135-36-slide-film/",
+        "V120x1": "https://acephoto.net/do-not-use/fuji-velvia-50-120-single-roll/"
+      }
+    },
+    {
+      "id": "ultrafine",
+      "name": "Ultrafine Online",
+      "method": "html",
+      "jsonld_trusted": false,
+      "note": "站内搜索不可用，只能靠固定 URL。V120x5（Dated 08/2020 过期片）2026-09-16 已 404 下架。",
+      "urls": {
+        "P120x5": "https://www.ultrafineonline.com/fujip100f120.html"
+      }
+    },
+    {
+      "id": "mpex",
+      "name": "Midwest Photo (MPEX)",
+      "method": "html",
+      "jsonld_trusted": true,
+      "search": "https://mpex.com/catalogsearch/result/?term={q}",
+      "urls": {
+        "P135": "https://mpex.com/fujifilm-provia-100-pro-color-transparency-film-35mm-roll-film-36-exp.html",
+        "P120x5": "https://mpex.com/fujifilm-provia-100f-professional-color-transparency-film-120-roll-5-pack.html",
+        "V135": "https://mpex.com/fujifilm-fujichrome-velvia-50-professional-color-negative-film-35mm-roll-film.html"
+      }
+    },
+    {
+      "id": "samys",
+      "name": "Samy's Camera",
+      "method": "html",
+      "jsonld_trusted": true,
+      "note": "页面含 Limit N Rolls Per Customer 限购信息，值得一并抓",
+      "search": "https://www.samys.com/s/{q}",
+      "urls": {
+        "P135": "https://www.samys.com/p/Film/16326028/Fujifilm-Fujichrome-Provia-100F-Professional-RDP-III-Color-Transparency-Film-35mm-Roll-Film,-36-Exposures/207062.html",
+        "P120x1": "https://www.samys.com/p/Film/16326092/Fujifilm-RDPIII-120-Provia-100F-Film---Single-Roll/14600.html",
+        "V135": "https://www.samys.com/p/Film/16329161/Fujifilm-RVP-Fujichrome-Velvia-50-135-36-Professional-Color-Slide-Transparency-Film-ISO-50---Single-Roll/14510.html",
+        "V120x1": "https://www.samys.com/p/Film/16329185/Fujifilm-RVP-120-Fujichrome-Velvia-50-Pro-Color-Slide-Transparency-Film/14512.html"
+      }
+    },
+    {
+      "id": "fotocare",
+      "name": "Fotocare",
+      "method": "html",
+      "jsonld_trusted": false,
+      "note": "线上不发货，Available In-Store Only",
+      "urls": {
+        "P135": "https://www.fotocare.com/FUJIFILM_PROVIA_RDP_III_135_36_p/16380.htm",
+        "P120x5": "https://www.fotocare.com/Fujifilm_PROVIA_100F_RDP_III_120_p/16387.htm"
+      }
+    },
+    {
+      "id": "dodd",
+      "name": "Dodd Camera",
+      "method": "html",
+      "jsonld_trusted": false,
+      "note": "JSON-LD 谎报 InStock，真实状态在页面文本 Backorder",
+      "search": "https://doddcamera.com/catalogsearch/result/index/?q={q}",
+      "urls": {
+        "P135": "https://doddcamera.com/fuji-rdp-iii-provia-100f-135-36-single-roll"
+      }
+    },
+    {
+      "id": "dwaynes",
+      "name": "Dwayne's Photo",
+      "method": "dwaynes_api",
+      "jsonld_trusted": null,
+      "note": "API 无库存字段；V120x5 是 EXP 过期片",
+      "product_ids": {
+        "P135": "52512",
+        "P120x1": "52520",
+        "V120x5": "54541"
+      },
+      "urls": {
+        "P135": "https://www.dwaynesphoto.com/site/products/c/purchase-new-film?product=52512-fujichrome-35mm-provia-rdpiii-100f-36-exposures-single-roll",
+        "P120x1": "https://www.dwaynesphoto.com/site/products/c/purchase-new-film?product=52520-fujichrome-120-provia-rdpiii-100f",
+        "V120x5": "https://www.dwaynesphoto.com/site/products/c/purchase-new-film?product=54541-fujichrome-velvia-50-120-pack-of-5-exp"
+      }
+    },
+    {
+      "id": "bh",
+      "name": "B&H Photo Video",
+      "method": "headless",
+      "jsonld_trusted": true,
+      "note": "Cloudflare 挑战：需轮询等到 title 不再是 'Just a moment...'（5-20 秒）",
+      "search": "https://www.bhphotovideo.com/c/search?q={q}",
+      "urls": {
+        "P135": "https://www.bhphotovideo.com/c/product/181489-USA/Fujifilm_14883175_RDP_III_135_36_Fujichrome_Provia.html",
+        "P120x5": "https://www.bhphotovideo.com/c/product/181498-USA/Fujifilm_15341588_RDP_III_120_Fujichrome_Provia.html",
+        "V135": "https://www.bhphotovideo.com/c/product/512063-USA/Fujifilm_15757464_RVP_135_36_Fujichrome_Velvia.html",
+        "V135x5": "https://www.bhphotovideo.com/c/product/647026-USA/Fujifilm_15942265_RVP_135_36_Fujichrome_Velvia.html",
+        "V120x5": "https://www.bhphotovideo.com/c/product/512066-USA/Fujifilm_15757543_RVP_120_Fujichrome_Velvia.html"
+      }
+    },
+    {
+      "id": "adorama",
+      "name": "Adorama",
+      "method": "headless",
+      "jsonld_trusted": true,
+      "note": "JSON-LD 会返回 BackOrder / Discontinued，是唯一能直接读出可下单状态的大站",
+      "search": "https://www.adorama.com/l/?searchinfo={q}",
+      "urls": {
+        "P135": "https://www.adorama.com/fjrdp336u.html",
+        "P120x5": "https://www.adorama.com/fjrdp31205.html",
+        "V135": "https://www.adorama.com/fjrvp5036.html",
+        "V120x5": "https://www.adorama.com/fjrvp50120pp.html"
+      }
+    },
+    {
+      "id": "uniquephoto",
+      "name": "Unique Photo",
+      "method": "headless",
+      "jsonld_trusted": false,
+      "note": "JSON-LD 谎报 InStock；真实状态是页面文本 'Backordered - On Allocation'。站内搜索不可用（返回全目录）",
+      "urls": {
+        "V135": "https://www.uniquephoto.com/product/fujifilmrvp1353650asa15942265"
+      }
+    },
+    {
+      "id": "georges",
+      "name": "George's Camera",
+      "method": "dakis",
+      "host": "georgescamera.com",
+      "carries": [
+        "P135",
+        "P120b"
+      ],
+      "note": "均为 In store only",
+      "store_uuid": "8b4403d0-540c-012a-64d6-00163e7d1945"
+    },
+    {
+      "id": "bergencounty",
+      "name": "Bergen County Camera",
+      "method": "dakis",
+      "host": "bergencountycamera.com",
+      "carries": [
+        "P135"
+      ],
+      "store_uuid": "3c2d15b0-3ee7-012b-e331-001b631c2c70"
+    },
+    {
+      "id": "paulsphoto",
+      "name": "Paul's Photo",
+      "method": "dakis",
+      "host": "paulsphoto.com",
+      "carries": [
+        "P120b"
+      ],
+      "note": "标注 Coming back soon!",
+      "store_uuid": "0219ba20-1c41-012a-afd2-00132064b77a"
+    },
+    {
+      "id": "servicephoto",
+      "name": "Service Photo",
+      "method": "dakis",
+      "host": "servicephoto.com",
+      "carries": [
+        "P120x1"
+      ],
+      "store_uuid": "d3ad8f00-9638-0130-8784-20cf30bab63e"
+    },
+    {
+      "id": "keh",
+      "name": "KEH Camera",
+      "method": "headless",
+      "note": "2026-09-16 复核：headless 下首个页面可过 Cloudflare 并渲染出真实文案，此前标注的『持续 403 无解』已不成立。但同一 context 内后续请求会再次被挑战，必须每个 URL 之间留冷却或新建 context。缺货原文为 'this item is temporarily unavailable' + 'notified when it comes back in stock'，旧 STATUS_RULES 会命中 'in stock' 误判为有货，已修。",
+      "urls": {
+        "P135": "https://www.keh.com/shop/film-fujichrome-rdpiii-135-36-provia-100f-iso-100-35mm-color-positive-film-666683.html",
+        "P120x5": "https://www.keh.com/shop/film-fujichrome-rdpiii-120-provia-100f-iso-100-propack-5-rolls-color-positive-film-666705.html",
+        "V135": "https://www.keh.com/shop/fujifilm-fujichrome-rvp-50-velvia-135-36-iso-50-35mm-color-transparency-film.html"
+      },
+      "jsonld_trusted": false
+    },
+    {
+      "id": "roberts",
+      "name": "Roberts Camera",
+      "method": "blocked",
+      "note": "Cloudflare 持续 403",
+      "urls": {
+        "P135": "https://robertscamera.com/fujifilm-rdpiii-100f-35mm-36-exposures",
+        "V135": "https://robertscamera.com/fujifilm-velvia-rvp-50-35mm-36-exposures",
+        "V120x1": "https://robertscamera.com/fujifilm-velvia-rvp-50-120"
+      }
+    },
+    {
+      "id": "spartanphoto",
+      "name": "Spartan Photo Center",
+      "method": "dakis",
+      "host": "spartanphotocenter.com",
+      "store_uuid": "c47b2140-a826-012b-752a-00163e08a1c2",
+      "carries": [],
+      "verified": false,
+      "note": "2026-09-16 经首页 embed 标记确认属 Dakis 平台，但本网络下 avina.mydakis.com 全站 403，无法验证它上架了哪些 SKU。carries 为空表示【未验证】，不等于未上架——换网络后须逐一探测。"
+    },
+    {
+      "id": "fromex",
+      "name": "Fromex Photo",
+      "method": "dakis",
+      "host": "fromex.com",
+      "store_uuid": "7adf6b50-6acd-012a-6578-00163e7d1945",
+      "carries": [],
+      "verified": false,
+      "note": "2026-09-16 经首页 embed 标记确认属 Dakis 平台，但本网络下 avina.mydakis.com 全站 403，无法验证它上架了哪些 SKU。carries 为空表示【未验证】，不等于未上架——换网络后须逐一探测。"
+    },
+    {
+      "id": "mikescamera",
+      "name": "Mike's Camera",
+      "method": "dakis",
+      "host": "mikescamera.com",
+      "store_uuid": "5c463e80-3f03-012b-e32f-001b631c2c70",
+      "carries": [],
+      "verified": false,
+      "note": "2026-09-16 经首页 embed 标记确认属 Dakis 平台，但本网络下 avina.mydakis.com 全站 403，无法验证它上架了哪些 SKU。carries 为空表示【未验证】，不等于未上架——换网络后须逐一探测。"
+    },
+    {
+      "id": "biggscameras",
+      "name": "Biggs Cameras",
+      "method": "dakis",
+      "host": "biggscameras.com",
+      "store_uuid": "6e839ee0-a7d1-0129-af8e-00132064b77a",
+      "carries": [],
+      "verified": false,
+      "note": "2026-09-16 经首页 embed 标记确认属 Dakis 平台，但本网络下 avina.mydakis.com 全站 403，无法验证它上架了哪些 SKU。carries 为空表示【未验证】，不等于未上架——换网络后须逐一探测。"
+    },
+    {
+      "id": "murphyscamera",
+      "name": "Murphy's Camera",
+      "method": "dakis",
+      "host": "murphyscamera.com",
+      "store_uuid": "7695f6b0-e6dc-0129-afc6-00132064b77a",
+      "carries": [],
+      "verified": false,
+      "note": "2026-09-16 经首页 embed 标记确认属 Dakis 平台，但本网络下 avina.mydakis.com 全站 403，无法验证它上架了哪些 SKU。carries 为空表示【未验证】，不等于未上架——换网络后须逐一探测。"
+    },
+    {
+      "id": "arlingtoncamera",
+      "name": "Arlington Camera",
+      "method": "dakis",
+      "host": "arlingtoncamera.com",
+      "store_uuid": "7fd26050-468a-013b-9f22-00163e898325",
+      "carries": [],
+      "verified": false,
+      "note": "2026-09-16 经首页 embed 标记确认属 Dakis 平台，但本网络下 avina.mydakis.com 全站 403，无法验证它上架了哪些 SKU。carries 为空表示【未验证】，不等于未上架——换网络后须逐一探测。"
+    },
+    {
+      "id": "cardinalcamera",
+      "name": "Cardinal Camera",
+      "method": "dakis",
+      "host": "cardinalcamera.com",
+      "store_uuid": "e1a41f50-2f3d-012b-f7a4-00163e294806",
+      "carries": [],
+      "verified": false,
+      "note": "2026-09-16 经首页 embed 标记确认属 Dakis 平台，但本网络下 avina.mydakis.com 全站 403，无法验证它上架了哪些 SKU。carries 为空表示【未验证】，不等于未上架——换网络后须逐一探测。"
+    },
+    {
+      "id": "competitivecameras",
+      "name": "Competitive Cameras",
+      "method": "dakis",
+      "host": "competitivecameras.com",
+      "store_uuid": "6d20c710-1ad1-0138-2506-00163e91ef40",
+      "carries": [],
+      "verified": false,
+      "note": "2026-09-16 经首页 embed 标记确认属 Dakis 平台，但本网络下 avina.mydakis.com 全站 403，无法验证它上架了哪些 SKU。carries 为空表示【未验证】，不等于未上架——换网络后须逐一探测。"
+    },
+    {
+      "id": "danscamera",
+      "name": "Dan's Camera City",
+      "method": "dakis",
+      "host": "danscamera.com",
+      "store_uuid": "87fe3460-1acc-0139-2068-00163e91ef40",
+      "carries": [],
+      "verified": false,
+      "note": "2026-09-16 经首页 embed 标记确认属 Dakis 平台，但本网络下 avina.mydakis.com 全站 403，无法验证它上架了哪些 SKU。carries 为空表示【未验证】，不等于未上架——换网络后须逐一探测。"
+    },
+    {
+      "id": "milfordphoto",
+      "name": "Milford Photo",
+      "method": "dakis",
+      "host": "milfordphoto.com",
+      "store_uuid": "c1006730-affe-0129-af90-00132064b77a",
+      "carries": [],
+      "verified": false,
+      "note": "2026-09-16 经首页 embed 标记确认属 Dakis 平台，但本网络下 avina.mydakis.com 全站 403，无法验证它上架了哪些 SKU。carries 为空表示【未验证】，不等于未上架——换网络后须逐一探测。"
+    },
+    {
+      "id": "schillers",
+      "name": "Schiller's Camera",
+      "method": "dakis",
+      "host": "schillers.com",
+      "store_uuid": "606f2900-c47c-0138-dabf-00163e91ef40",
+      "carries": [],
+      "verified": false,
+      "note": "2026-09-16 经首页 embed 标记确认属 Dakis 平台，但本网络下 avina.mydakis.com 全站 403，无法验证它上架了哪些 SKU。carries 为空表示【未验证】，不等于未上架——换网络后须逐一探测。"
+    }
+  ],
+  "delisted": {
+    "_comment": "确认已下架/已停售，不要放回监控源；搜索引擎仍在索引这些页面。2026-09-16 复核：shopmoment / filmphotographystore 站内搜索确为 0 结果，予以保留；原列在此处的 6 家 Dakis 商家站点仍在运营，已移回 stores[] 待验证。",
+    "stores": [
+      "shopmoment.com",
+      "filmphotographystore.com",
+      "richardphotolab.com",
+      "glazerscamera.com",
+      "lookingglassphoto.com",
+      "bedfords.com"
+    ],
+    "skus": [
+      "B&H P135x5 (页面 404)",
+      "Adorama P135x5 (Discontinued)",
+      "Adorama V135x5 (Discontinued)"
+    ]
+  },
+  "_verified_from_network": "2026-09-16 实测：本机出口 IP 下 mpex/samys/fotocare/dodd 直连与 headless 均 403，B&H/Adorama headless 403，avina.mydakis.com 全站 403（整个 Dakis 层不可读），而 KEH 反而可读。可达性高度依赖出口 IP，换网络后必须重跑全量再下结论。"
+}

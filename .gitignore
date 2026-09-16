@@ -1,0 +1,12 @@
+# 本地 Python 环境（149MB，按 README 的步骤重建即可，不入库）
+.venv/
+__pycache__/
+*.py[cod]
+
+# 巡检产物：每轮快照/日志/报告只对本机有意义，且会无限增长
+runs/*
+!runs/README.md
+!runs/.gitkeep
+
+# macOS
+.DS_Store
